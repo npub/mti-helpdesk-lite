@@ -7,18 +7,38 @@
         "php": ">=8.2",
         "ext-ctype": "*",
         "ext-iconv": "*",
+        "doctrine/doctrine-bundle": ">=2.18.2",
+        "doctrine/orm": "^3.6.2",
+        "gedmo/doctrine-extensions": "^3.22",
         "symfony/console": "7.4.*",
         "symfony/dotenv": "7.4.*",
-        "symfony/flex": "^2",
+        "symfony/expression-language": "7.4.*",
+        "symfony/flex": "^2.10",
         "symfony/framework-bundle": "7.4.*",
         "symfony/runtime": "7.4.*",
+        "symfony/validator": "7.4.*",
         "symfony/yaml": "7.4.*"
     },
     "require-dev": {
+        "friendsofphp/php-cs-fixer": ">=3.94.2",
+        "phpstan/extension-installer": "^1.4.3",
+        "phpstan/phpdoc-parser": "^2.3.2",
+        "phpstan/phpstan": "^2.1.39",
+        "phpstan/phpstan-deprecation-rules": "^2.0.4",
+        "phpstan/phpstan-doctrine": "^2.0.17",
+        "phpstan/phpstan-strict-rules": "^2.0.10",
+        "phpstan/phpstan-symfony": "^2.0.14",
+        "phpunit/phpunit": "^11.5",
+        "symfony/browser-kit": "7.4.*",
+        "symfony/css-selector": "7.4.*",
+        "symfony/maker-bundle": "^1.66",
+        "symfony/stopwatch": "7.4.*",
+        "symfony/web-profiler-bundle": "7.4.*"
     },
     "config": {
         "allow-plugins": {
             "php-http/discovery": true,
+            "phpstan/extension-installer": true,
             "symfony/flex": true,
             "symfony/runtime": true
         },
@@ -55,6 +75,32 @@
         ],
         "post-update-cmd": [
             "@auto-scripts"
+        ],
+        "test": [
+            "@php bin/console cache:warmup",
+            "@phpstan",
+            "@lint-doctrine",
+            "@lint-yaml",
+            "@php bin/console lint:container --no-interaction"
+        ],
+
+        "lint-doctrine": "@php bin/console doctrine:schema:validate --skip-sync --no-interaction",
+        "lint-yaml": "@php bin/console lint:yaml ./config --no-interaction",
+
+        "phpunit": "./bin/phpunit",
+
+        "phpstan": [
+            "vendor/bin/phpstan analyse --memory-limit 1G --configuration=phpstan.dist.neon"
+        ],
+        "phpstan-baseline-update": [
+            "vendor/bin/phpstan analyse --memory-limit 1G --configuration=phpstan.dist.neon --generate-baseline --allow-empty-baseline"
+        ],
+
+        "lint-check": [
+            "vendor/bin/php-cs-fixer check --show-progress=dots --diff --verbose"
+        ],
+        "lint-fix": [
+            "vendor/bin/php-cs-fixer fix --show-progress=dots --diff"
         ]
     },
     "conflict": {
@@ -63,7 +109,8 @@
     "extra": {
         "symfony": {
             "allow-contrib": false,
-            "require": "7.4.*"
+            "require": "7.4.*",
+            "docker": false
         }
     }
 }

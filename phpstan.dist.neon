@@ -1,0 +1,19 @@
+parameters:
+    level: max
+    paths:
+        - src/
+        # - tests/Controller/
+
+    errorFormat: table
+    editorUrl: 'vscode://file/%%file%%:%%line%%'
+    editorUrlTitle: '%%relFile%%:%%line%%'
+
+    symfony:
+        containerXmlPath: var/cache/dev/App_KernelDevDebugContainer.xml
+        constantHassers: false
+        consoleApplicationLoader: phpstan-console-loader.php
+    doctrine:
+        objectManagerLoader: phpstan-doctrine-loader.php
+
+includes:
+    - phpstan-baseline.neon
