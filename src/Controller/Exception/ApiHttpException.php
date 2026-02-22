@@ -65,6 +65,9 @@ class ApiHttpException extends \Exception
         return $this;
     }
 
+    /**
+     * Создание JSON ответа с ошибкой.
+     */
     public function createJsonResponse(): JsonResponse
     {
         $error = [
@@ -82,8 +85,12 @@ class ApiHttpException extends \Exception
         return new JsonResponse($error, $code);
     }
 
+    /**
+     * Создание JSON ответа для неизвестной ошибки.
+     */
     public static function createUnknownErrorJsonResponse(\Throwable $th): JsonResponse
     {
+        // По хорошему сообщение (getMessage()) неизвестной ошибки выводить не правильно, но тут Dev среда.
         $exception = new self($th->getMessage(), 'internal_error', null, Response::HTTP_INTERNAL_SERVER_ERROR, $th);
 
         return $exception->createJsonResponse();

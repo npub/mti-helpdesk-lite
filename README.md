@@ -33,7 +33,7 @@ APP_API_KEY=123
 php bin/console doctrine:schema:create [--dump-sql]
 ```
 
-Также запросы на создание структуры БД можно найти в файле `private/dump.sql`.
+Также запросы на создание БД можно найти в файлах `private/scheme.sql` (только структура) и в файле `private/data.sql` (структура и тестовые данные).
 
 5. Запустить автотесты
 
@@ -82,8 +82,7 @@ curl -X "POST" "https://localhost:8000/api/v1/tickets" \
 
 ### Получение списка заявок
 ```curl
-## 2
-curl "https://localhost:8000/api/v1/tickets?status=new&page=1&per_page=10&q=%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%B0%D0%B5%D1%82&sort=-created_at" \
+curl "https://localhost:8000/api/v1/tickets?status=in_progress&page=1&per_page=10&q=%D0%BE%D1%82%D0%BA%D1%80%D1%8B%D0%B2%D0%B0%D0%B5%D1%82%D1%81%D1%8F&sort=-created_at" \
      -H 'X-API-KEY: 123'
 ```
 
@@ -92,3 +91,16 @@ curl "https://localhost:8000/api/v1/tickets?status=new&page=1&per_page=10&q=%D1%
 curl "https://localhost:8000/api/v1/tickets/1" \
      -H 'X-API-KEY: 123'
 ```
+
+## Добавление комментария и смена статуса заявки
+curl -X "POST" "https://localhost:8000/api/v1/tickets/1/events" \
+     -H 'X-API-KEY: 123' \
+     -H 'Content-Type: application/json; charset=utf-8' \
+     -d $'{
+  "version": 4,
+  "comment": {
+    "message": "Заработало. Спасибо!",
+    "author": "Иван"
+  },
+  "status": "closed"
+}'

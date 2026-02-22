@@ -16,7 +16,9 @@ use App\Repository\TicketCommentRepository;
 use App\Repository\TicketRepository;
 use Doctrine\Common\Collections\Order;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -80,7 +82,7 @@ final class ApiTicketController extends AbstractController
     }
 
     /**
-     * Проверка данных объекта перед сохранением в базу данных.
+     * Валидация данных объекта.
      * (параметры валидации настраиваются в атрибутах Entity).
      *
      * @throws UnauthorizedException
@@ -91,10 +93,10 @@ final class ApiTicketController extends AbstractController
         if (\count($errors) > 0) {
             $errorsDescriptions = [];
             foreach ($errors as $error) {
-                $errorsDescriptions[] = $error->getMessage();
+                $errorsDescriptions[] = $error->getMessage() . ' (поле ' . $error->getPropertyPath() . ')';
             }
 
-            throw new UnprocessableEntityException('Ошибка валидации данных объекта', $errorsDescriptions);
+            throw new UnprocessableEntityException('Ошибка валидации объекта', $errorsDescriptions);
         }
     }
 
@@ -110,12 +112,12 @@ final class ApiTicketController extends AbstractController
             /**
              * @var array{title: string|null, description: string|null, author_email: string|null}
              */
-            $requestData = $this->parseRequestData($request);
+            $post = $this->parseRequestData($request);
 
             $ticket = new Ticket();
-            $ticket->setTitle($requestData['title'] ?? '');
-            $ticket->setDescription($requestData['description'] ?? '');
-            $ticket->setAuthorEmail($requestData['author_email'] ?? '');
+            $ticket->setTitle($post['title'] ?? '');
+            $ticket->setDescription($post['description'] ?? '');
+            $ticket->setAuthorEmail($post['author_email'] ?? '');
             $this->validateObject($ticket);
 
             $this->em->persist($ticket);
@@ -211,14 +213,8 @@ final class ApiTicketController extends AbstractController
             ;
 
             // Фильтр по статусу
-            $status = $request->query->get('status');
+            $status = $this->loadStatusFromValue($request->query->get('status'));
             if (null !== $status) {
-                $status = Status::tryFrom($status);
-
-                if (null === $status) {
-                    throw new BadRequestException('Указан неверный статус (допустимые значения: ' . implode(', ', Status::values()) . ')');
-                }
-
                 $qb
                     ->andWhere('t.status = :status_filter')
                     ->setParameter('status_filter', $status)
@@ -274,6 +270,85 @@ final class ApiTicketController extends AbstractController
             ]);
         } catch (ApiHttpException $e) {
             return $e->createJsonResponse();
+        } catch (\Throwable $th) {
+            return ApiHttpException::createUnknownErrorJsonResponse($th);
+        }
+    }
+
+    /**
+     * Проверка и конвертация в Enum значение статуса.
+     *
+     * @throws BadRequestException
+     */
+    private function loadStatusFromValue(?string $status): ?Status
+    {
+        if (null !== $status) {
+            $status = Status::tryFrom($status);
+            if (null === $status) {
+                throw new BadRequestException('Указан неверный статус (допустимые значения: ' . implode(', ', Status::values()) . ')');
+            }
+        }
+
+        return $status;
+    }
+
+    /**
+     * Добавление комментария и смена статуса (опционально, если не передать, то сохраняется прежний).
+     *
+     * POST: /api/v1/tickets/{id}/events
+     */
+    #[Route('tickets/{id<\d+>}/events', name: 'app_api_ticket_comment_post', methods: Request::METHOD_POST)]
+    public function postComment(int $id, Request $request): JsonResponse
+    {
+        try {
+            /**
+             * @var array{version: int|null, comment: array{author: string|null, message: string|null}|null, status: string|null}
+             */
+            $post = $this->parseRequestData($request);
+            $ticketVersion = $post['version'] ?? null;
+            if (null === $ticketVersion) {
+                throw new BadRequestException('Не указана версия заявки');
+            }
+
+            $comment = new TicketComment();
+            $comment->setAuthor($post['comment']['author'] ?? '');
+            $comment->setMessage($post['comment']['message'] ?? '');
+            $this->validateObject($comment);
+
+            $this->em->beginTransaction();
+            // Начало транзакции выше представлено в ознакомительных целях,
+            // т.к. тут простой код и всего один em->flush() — соответственно «под капотом» Doctrine выполняет все запросы внутри транзакции автоматически.
+            // Но если бы код был сложнее, с вложенностью и т.п., то оборачивание всего в большую транзакцию было бы востребовано.
+
+            /**
+             * @var Ticket|null
+             */
+            $ticket = $this->ticketRepository->find($id, LockMode::OPTIMISTIC, $ticketVersion);
+            if (null === $ticket) {
+                throw new NotFoundException('Заявка не найдена');
+            }
+
+            $this->em->persist($comment);
+            $ticket->addComment($comment);
+
+            $status = $this->loadStatusFromValue($post['status'] ?? null);
+            if (null !== $status) {
+                $ticket->setStatus($status);
+            }
+            $ticket->setUpdatedNow();
+
+            $this->em->flush();
+            $this->em->commit();
+
+            return $this->json([
+                'id' => $ticket->getId(),
+                'version' => $ticket->getVersion(),
+                'status' => $ticket->getStatus()->value,
+            ]);
+        } catch (ApiHttpException $e) {
+            return $e->createJsonResponse();
+        } catch (OptimisticLockException $e) {
+            return (new ApiHttpException('Ошибка блокировки заявки на изменение (передана неактуальна версия)', 'wrong_version', codeHttp: Response::HTTP_CONFLICT))->createJsonResponse();
         } catch (\Throwable $th) {
             return ApiHttpException::createUnknownErrorJsonResponse($th);
         }

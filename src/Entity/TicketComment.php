@@ -33,10 +33,11 @@ class TicketComment
      * Автор.
      */
     #[ORM\Column(length: 100, options: ['comment' => 'Автор'])]
-    #[Assert\NotBlank]
     #[Assert\Length(
         min: 3,
+        minMessage: 'Имя автора должно быть не меньше {{ limit }} символов',
         max: 100,
+        maxMessage: 'Имя автора должно быть не больше {{ limit }} символов'
     )]
     private string $author;
 
@@ -44,9 +45,11 @@ class TicketComment
      * Сообщение.
      */
     #[ORM\Column(type: Types::TEXT, options: ['comment' => 'Сообщение'])]
-    #[Assert\NotBlank]
     #[Assert\Length(
         min: 3,
+        minMessage: 'Сообщение должно быть не меньше {{ limit }} символов',
+        max: 4_294_967_295,  // MySQL LONGTEXT типе данных
+        maxMessage: 'Сообщение должно быть не больше {{ limit }} символов'
     )]
     private string $message;
 

@@ -44,7 +44,6 @@ class Ticket
      * Название.
      */
     #[ORM\Column(length: 200, options: ['comment' => 'Название'])]
-    #[Assert\NotBlank(message: 'Название не может быть пустым')]
     #[Assert\Length(
         min: 3,
         minMessage: 'Название должно быть не меньше {{ limit }} символов',
@@ -57,7 +56,11 @@ class Ticket
      * Описание.
      */
     #[ORM\Column(type: Types::TEXT, options: ['comment' => 'Описание'])]
-    private string $description;
+    #[Assert\Length(
+        max: 4_294_967_295,  // MySQL LONGTEXT типе данных
+        maxMessage: 'Описание должно быть не больше {{ limit }} символов'
+    )]
+    private string $description = '';
 
     /**
      * Email автора.
@@ -163,7 +166,7 @@ class Ticket
         return $this->ticketComments;
     }
 
-    public function addTicketComment(TicketComment $ticketComment): static
+    public function addComment(TicketComment $ticketComment): static
     {
         if (!$this->ticketComments->contains($ticketComment)) {
             $this->ticketComments->add($ticketComment);
@@ -173,7 +176,7 @@ class Ticket
         return $this;
     }
 
-    public function removeTicketComment(TicketComment $ticketComment): static
+    public function removeComment(TicketComment $ticketComment): static
     {
         $this->ticketComments->removeElement($ticketComment);
 
