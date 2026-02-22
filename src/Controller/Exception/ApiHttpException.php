@@ -82,7 +82,7 @@ class ApiHttpException extends \Exception
         return new JsonResponse($error, $code);
     }
 
-    public static function createUnknownJsonResponse(\Throwable $th): JsonResponse
+    public static function createUnknownErrorJsonResponse(\Throwable $th): JsonResponse
     {
         $exception = new self($th->getMessage(), 'internal_error', null, Response::HTTP_INTERNAL_SERVER_ERROR, $th);
 

@@ -25,7 +25,7 @@ DB_PASS=
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_NAME=test
-APP_API_KEY=my_api_key
+APP_API_KEY=123
 
 4. Создать структуру БД (ключ `--dump-sql` выдаст SQL для создания структуры БД вручную).
 
@@ -64,7 +64,24 @@ symfony server:start
 php -S localhost:8000 -t public/
 ```
 
-7. Примеры запросов
+## Примеры запросов
 
 В адресе запросов необходимо использовать базовый адрес (протокол/домен/порт) из предыдущего шага.
 
+### Создание заявки
+```curl
+curl -X "POST" "https://localhost:8000/api/v1/tickets" \
+     -H 'X-API-KEY: 123' \
+     -H 'Content-Type: text/plain; charset=utf-8' \
+     -d $'{
+  "title": "Не работает отчёт",
+  "description": "При открытии 500 ошибка",
+  "author_email": "user@company.local" 
+}'
+```
+
+### Получение карточки заявки с комментариями.
+```curl
+curl "https://localhost:8000/api/v1/tickets/1" \
+     -H 'X-API-KEY: 123' \
+```

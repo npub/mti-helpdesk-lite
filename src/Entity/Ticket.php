@@ -131,7 +131,7 @@ class Ticket
         return $this;
     }
 
-    public function getStatus(): ?Status
+    public function getStatus(): Status
     {
         return $this->status;
     }

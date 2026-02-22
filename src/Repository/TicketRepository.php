@@ -9,7 +9,8 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @extends ServiceEntityRepository<Ticket>
+ * @template T of Ticket
+ * @extends ServiceEntityRepository<T>
  */
 class TicketRepository extends ServiceEntityRepository
 {
