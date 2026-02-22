@@ -1,0 +1,57 @@
+{
+  "info": {
+    "name": "API Tickets",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "4 POST Comment",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "https://localhost:8000/api/v1/tickets/1/events",
+          "query": null,
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "v1",
+            "tickets",
+            "1",
+            "events"
+          ]
+        },
+        "description": "",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "disabled": false,
+            "description": null
+          },
+          {
+            "key": "X-API-KEY\n",
+            "value": "123",
+            "disabled": false,
+            "description": null
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "disabled": false,
+          "raw": "{\"version\":4,\"comment\":{\"author\":\"\\u0418\\u0432\\u0430\\u043d\",\"message\":\"\\u0417\\u0430\\u0440\\u0430\\u0431\\u043e\\u0442\\u0430\\u043b\\u043e. \\u0421\\u043f\\u0430\\u0441\\u0438\\u0431\\u043e!\"},\"status\":\"closed\"}"
+        },
+        "auth": null
+      },
+      "protocolProfileBehavior": {
+        "followRedirects": false,
+        "followOriginalHttpMethod": false,
+        "followAuthorizationHeader": false
+      },
+      "response": []
+    }
+  ]
+}

@@ -60,9 +60,10 @@ return (new Config())
     ->setFinder(
         (new Finder())
             // 💡 root folder to check
-            ->in(
+            ->in([
                 __DIR__ . '/src',
-                // __DIR__ . '/tests/Controller',
+                __DIR__ . '/tests/Controller',
+                ]
             )
             // 💡 additional files, eg bin entry file
             // ->append([__DIR__.'/bin-entry-file'])

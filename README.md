@@ -39,7 +39,11 @@ php bin/console doctrine:schema:create [--dump-sql]
 
 ```bash
 symfony composer run test
+```
+
 или
+
+```bash
 composer run test
 ```
 
@@ -67,8 +71,10 @@ php -S localhost:8000 -t public/
 ## Примеры запросов
 
 В адресе запросов необходимо использовать базовый адрес (протокол/домен/порт) из предыдущего шага.
+См. примеры запросов в формате _Postman Collection_ в `private/*.json`.
 
-### Создание заявки
+### CURL
+#### Создание заявки
 ```curl
 curl -X "POST" "https://localhost:8000/api/v1/tickets" \
      -H 'X-API-KEY: 123' \
@@ -80,19 +86,19 @@ curl -X "POST" "https://localhost:8000/api/v1/tickets" \
 }'
 ```
 
-### Получение списка заявок
+#### Получение списка заявок
 ```curl
 curl "https://localhost:8000/api/v1/tickets?status=in_progress&page=1&per_page=10&q=%D0%BE%D1%82%D0%BA%D1%80%D1%8B%D0%B2%D0%B0%D0%B5%D1%82%D1%81%D1%8F&sort=-created_at" \
      -H 'X-API-KEY: 123'
 ```
 
-### Получение карточки заявки с комментариями.
+#### Получение карточки заявки с комментариями.
 ```curl
 curl "https://localhost:8000/api/v1/tickets/1" \
      -H 'X-API-KEY: 123'
 ```
 
-## Добавление комментария и смена статуса заявки
+#### Добавление комментария и смена статуса заявки
 curl -X "POST" "https://localhost:8000/api/v1/tickets/1/events" \
      -H 'X-API-KEY: 123' \
      -H 'Content-Type: application/json; charset=utf-8' \

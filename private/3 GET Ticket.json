@@ -1,0 +1,50 @@
+{
+  "info": {
+    "name": "API Tickets",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "3 GET Ticket",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "https://localhost:8000/api/v1/tickets/1",
+          "query": null,
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "v1",
+            "tickets",
+            "1"
+          ]
+        },
+        "description": "",
+        "header": [
+          {
+            "key": "X-API-KEY\n",
+            "value": "123",
+            "disabled": false,
+            "description": null
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "disabled": false,
+          "raw": ""
+        },
+        "auth": null
+      },
+      "protocolProfileBehavior": {
+        "followRedirects": false,
+        "followOriginalHttpMethod": false,
+        "followAuthorizationHeader": false
+      },
+      "response": []
+    }
+  ]
+}

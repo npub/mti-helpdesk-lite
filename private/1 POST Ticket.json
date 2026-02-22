@@ -1,0 +1,49 @@
+{
+  "info": {
+    "name": "API Tickets",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1 POST Ticket",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "https://localhost:8000/api/v1/tickets",
+          "query": null,
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "v1",
+            "tickets"
+          ]
+        },
+        "description": "",
+        "header": [
+          {
+            "key": "X-API-KEY\n",
+            "value": "123",
+            "disabled": false,
+            "description": null
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "disabled": false,
+          "raw": "{\n  \"title\": \"На странице с Обратной связью указан старый номер телефона\",\n  \"description\": \"Нужно заменить на +7 (926) 123-45-67\",\n  \"author_email\": \"elena@company.local\"\n}"
+        },
+        "auth": null
+      },
+      "protocolProfileBehavior": {
+        "followRedirects": false,
+        "followOriginalHttpMethod": false,
+        "followAuthorizationHeader": false
+      },
+      "response": []
+    }
+  ]
+}

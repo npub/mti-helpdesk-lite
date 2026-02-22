@@ -15,7 +15,6 @@ use App\Entity\TicketComment;
 use App\Repository\TicketCommentRepository;
 use App\Repository\TicketRepository;
 use Doctrine\Common\Collections\Order;
-use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\OptimisticLockException;
@@ -35,6 +34,11 @@ final class ApiTicketController extends AbstractController
     public const API_KEY_NAME = 'X-API-KEY';
 
     /**
+     * @var string Шаблон формата даты по умолчанию
+     */
+    public const DATETIME_FORMAT_DEFAULT = 'Y-m-d H:i:s';
+
+    /**
      * @param TicketCommentRepository<TicketComment> $ticketCommentRepository
      * @param TicketRepository<Ticket>               $ticketRepository
      */
@@ -42,7 +46,6 @@ final class ApiTicketController extends AbstractController
         /** @var string Ключ авторизации */
         #[Autowire('%env(string:APP_API_KEY)%')]
         protected readonly string $apiKey,
-        protected readonly Connection $conn,
         protected readonly EntityManagerInterface $em,
         protected readonly TicketCommentRepository $ticketCommentRepository,
         protected readonly TicketRepository $ticketRepository,
@@ -157,8 +160,8 @@ final class ApiTicketController extends AbstractController
                 'author_email' => $ticket->getAuthorEmail(),
                 'status' => $ticket->getStatus()->value,
                 'version' => $ticket->getVersion(),
-                'created_at' => $ticket->getCreatedAt()->format('Y-m-d H:i:s'),
-                'updated_at' => $ticket->getUpdatedAt()->format('Y-m-d H:i:s'),
+                'created_at' => $ticket->getCreatedAt()->format(self::DATETIME_FORMAT_DEFAULT),
+                'updated_at' => $ticket->getUpdatedAt()->format(self::DATETIME_FORMAT_DEFAULT),
                 'comments' => [],
             ];
 
@@ -168,7 +171,7 @@ final class ApiTicketController extends AbstractController
                     'id' => $comment->getId(),
                     'author' => $comment->getAuthor(),
                     'message' => $comment->getMessage(),
-                    'created_at' => $comment->getCreatedAt()->format('Y-m-d H:i:s'),
+                    'created_at' => $comment->getCreatedAt()->format(self::DATETIME_FORMAT_DEFAULT),
                 ];
             }
 
@@ -257,8 +260,8 @@ final class ApiTicketController extends AbstractController
                     'id' => $ticket->getId(),
                     'title' => $ticket->getTitle(),
                     'status' => $ticket->getStatus()->value,
-                    'created_at' => $ticket->getCreatedAt()->format('Y-m-d H:i:s'),
-                    'updated_at' => $ticket->getUpdatedAt()->format('Y-m-d H:i:s'),
+                    'created_at' => $ticket->getCreatedAt()->format(self::DATETIME_FORMAT_DEFAULT),
+                    'updated_at' => $ticket->getUpdatedAt()->format(self::DATETIME_FORMAT_DEFAULT),
                 ];
             }
 
