@@ -1,0 +1,113 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Controller;
+
+use App\Controller\Exception\ApiHttpException;
+use App\Controller\Exception\UnauthorizedException;
+use App\Controller\Exception\UnprocessableEntityException;
+use App\Entity\Ticket;
+use App\Entity\TicketComment;
+use App\Repository\TicketCommentRepository;
+use App\Repository\TicketRepository;
+use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
+
+#[Route('/api/v1/')]
+final class ApiTicketController extends AbstractController
+{
+    /** @var string Название заголовка с ключом авторизации */
+    public const API_KEY_NAME = 'X-API-KEY';
+
+    public function __construct(
+        /** @var string Ключ авторизации */
+        #[Autowire('%env(string:APP_API_KEY)%')]
+        protected readonly string $apiKey,
+        protected readonly Connection $conn,
+        protected readonly EntityManagerInterface $em,
+        protected readonly TicketCommentRepository $ticketCommentRepository,
+        protected readonly TicketRepository $ticketRepository,
+        protected readonly ValidatorInterface $validator,
+    ) {
+    }
+
+    /**
+     * Получение данных из запроса.
+     *
+     * @throws UnauthorizedException
+     * @return array<string, mixed>
+     */
+    private function validateRequest(Request $request): array
+    {
+        if ($request->headers->get(self::API_KEY_NAME) !== $this->apiKey) {
+            throw new UnauthorizedException('Неверный ключ API (проверьте заголовок ' . self::API_KEY_NAME . ')');
+        }
+
+        /** @var array<string, mixed> */
+        $data = $request->toArray();
+
+        if (\count($data) === 0) {
+            throw new UnprocessableEntityException('Ошибка структуры данных запроса', ['Пустой запрос']);
+        }
+
+        return $data;
+    }
+
+    /**
+     * Проверка данных объекта перед сохранением в базу данных.
+     * (параметры валидации настраиваются в атрибутах Entity).
+     *
+     * @throws UnauthorizedException
+     */
+    private function validateObject(Ticket|TicketComment $object): void
+    {
+        $errors = $this->validator->validate($object);
+        if (\count($errors) > 0) {
+            $errorsDescriptions = [];
+            foreach ($errors as $error) {
+                $errorsDescriptions[] = $error->getMessage();
+            }
+
+            throw new UnprocessableEntityException('Ошибка валидации данных объекта', $errorsDescriptions);
+        }
+    }
+
+    /**
+     * Создание заявки.
+     */
+    #[Route('', name: 'app_api_create_ticket', methods: Request::METHOD_POST)]
+    public function createTicket(Request $request): JsonResponse
+    {
+        try {
+            /**
+             * @var array{title: string|null, description: string|null, author_email: string|null}
+             */
+            $requestData = $this->validateRequest($request);
+
+            $ticket = new Ticket();
+            $ticket->setTitle($requestData['title'] ?? '');
+            $ticket->setDescription($requestData['description'] ?? '');
+            $ticket->setAuthorEmail($requestData['author_email'] ?? '');
+            $this->validateObject($ticket);
+
+            $this->em->persist($ticket);
+            $this->em->flush();
+
+            return $this->json([
+                'id' => $ticket->getId(),
+            ], Response::HTTP_CREATED);
+        } catch (ApiHttpException $e) {
+            return $e->createJsonResponse();
+        } catch (\Throwable $th) {
+            return ApiHttpException::createUnknownJsonResponse($th);
+        }
+    }
+}

@@ -44,10 +44,12 @@ class Ticket
      * Название.
      */
     #[ORM\Column(length: 200, options: ['comment' => 'Название'])]
-    #[Assert\NotBlank]
+    #[Assert\NotBlank(message: 'Название не может быть пустым')]
     #[Assert\Length(
         min: 3,
+        minMessage: 'Название должно быть не меньше {{ limit }} символов',
         max: 200,
+        maxMessage: 'Название должно быть не больше {{ limit }} символов'
     )]
     private string $title;
 
@@ -61,9 +63,11 @@ class Ticket
      * Email автора.
      */
     #[ORM\Column(length: 255, options: ['comment' => 'Email автора'])]
-    #[Assert\Email]
+    #[Assert\NotBlank(message: 'Email автора не может быть пустым')]
+    #[Assert\Email(message: 'Неверный формат email')]
     #[Assert\Length(
         max: 255,
+        maxMessage: 'Email должен быть не больше {{ limit }} символов'
     )]
     private string $authorEmail;
 
@@ -81,7 +85,9 @@ class Ticket
 
     public function __construct()
     {
+        $this->createdAt = new \DateTimeImmutable();
         $this->ticketComments = new ArrayCollection();
+        $this->updatedAt = new \DateTimeImmutable();
     }
 
     public function getId(): ?int

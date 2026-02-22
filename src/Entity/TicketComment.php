@@ -33,7 +33,9 @@ class TicketComment
      * Автор.
      */
     #[ORM\Column(length: 100, options: ['comment' => 'Автор'])]
+    #[Assert\NotBlank]
     #[Assert\Length(
+        min: 3,
         max: 100,
     )]
     private string $author;
@@ -42,7 +44,16 @@ class TicketComment
      * Сообщение.
      */
     #[ORM\Column(type: Types::TEXT, options: ['comment' => 'Сообщение'])]
+    #[Assert\NotBlank]
+    #[Assert\Length(
+        min: 3,
+    )]
     private string $message;
+
+    public function __construct()
+    {
+        $this->createdAt = new \DateTimeImmutable();
+    }
 
     public function getId(): ?int
     {

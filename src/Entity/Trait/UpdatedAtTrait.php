@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Entity\Trait;
 
 use Doctrine\ORM\Mapping as ORM;
-use Gedmo\Mapping\Annotation as Gedmo;
 
 /**
  * Ген даты обновления.
@@ -19,7 +18,6 @@ trait UpdatedAtTrait
      * @var \DateTimeImmutable Дата обновления
      */
     #[ORM\Column(options: ['default' => 'CURRENT_TIMESTAMP', 'comment' => 'Дата обновления'])]
-    #[Gedmo\Timestampable(on: 'update')]
     protected \DateTimeImmutable $updatedAt;
 
     /**
@@ -41,11 +39,20 @@ trait UpdatedAtTrait
         $date = $this->convertDateTimeToImmutable($date);
 
         if (
-            !(new \ReflectionProperty(self::class, 'updatedAt'))->isInitialized($this)
-            || $this->isDatesDifferent($this->updatedAt, $date)
+            $this->isDatesDifferent($this->updatedAt, $date)
         ) {
             $this->updatedAt = $date;
         }
+
+        return $this;
+    }
+
+    /**
+     * Задать текущую дату обновления.
+     */
+    public function setUpdatedNow(): object
+    {
+        $this->updatedAt = new \DateTimeImmutable();
 
         return $this;
     }

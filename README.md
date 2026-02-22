@@ -18,9 +18,32 @@ composer install
 
 3. Настроить окружение (ENV)
 
-Скопировать файл `.env.local_template` в `.env.local` и настроить переменные окружения.
+Скопировать файл `.env.example` в `.env.local` и настроить переменные окружения в нём.
 
-4. Запустить проект
+DB_USER=root
+DB_PASS=
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_NAME=test
+APP_API_KEY=my_api_key
+
+4. Создать структуру БД (ключ `--dump-sql` выдаст SQL для создания структуры БД вручную).
+
+```bash
+php bin/console doctrine:schema:create [--dump-sql]
+```
+
+Также запросы на создание структуры БД можно найти в файле `private/dump.sql`.
+
+5. Запустить автотесты
+
+```bash
+symfony composer run test
+или
+composer run test
+```
+
+6. Запустить проект
 
 Если в системе установлен Symfony CLI (рекомендованный вариант):
 
@@ -32,7 +55,7 @@ symfony server:start
 ```bash
  [OK] Web server listening
       The Web server is using PHP FPM 8.2.30
-      http://127.0.0.1:8003
+      http://127.0.0.1:8000
 ```
 
 Иначе можно запустить проект командой (с текущей версией PHP системы):
@@ -40,4 +63,8 @@ symfony server:start
 ```bash
 php -S localhost:8000 -t public/
 ```
+
+7. Примеры запросов
+
+В адресе запросов необходимо использовать базовый адрес (протокол/домен/порт) из предыдущего шага.
 

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Entity\Trait;
 
 use Doctrine\ORM\Mapping as ORM;
-use Gedmo\Mapping\Annotation as Gedmo;
 
 /**
  * Ген даты создания.
@@ -19,7 +18,6 @@ trait CreatedAtTrait
      * @var \DateTimeImmutable Дата создания
      */
     #[ORM\Column(updatable: false, options: ['default' => 'CURRENT_TIMESTAMP', 'comment' => 'Дата создания'])]
-    #[Gedmo\Timestampable(on: 'create')]
     protected \DateTimeImmutable $createdAt;
 
     /**
@@ -39,8 +37,7 @@ trait CreatedAtTrait
         $date = $this->convertDateTimeToImmutable($date);
 
         if (
-            !(new \ReflectionProperty(self::class, 'createdAt'))->isInitialized($this)
-            || $this->isDatesDifferent($this->createdAt, $date)
+            $this->isDatesDifferent($this->createdAt, $date)
         ) {
             $this->createdAt = $date;
         }
