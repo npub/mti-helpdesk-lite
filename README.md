@@ -7,7 +7,7 @@
 1. Склонировать репозиторий
 
 ```bash
-git clone https://github.com/npub/micro-api-for-tickets.git
+git clone https://github.com/npub/mti-helpdesk-lite.git
 ```
 
 2. Установить зависимости
