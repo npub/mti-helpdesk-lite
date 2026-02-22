@@ -10,6 +10,7 @@ use Doctrine\Persistence\ManagerRegistry;
 
 /**
  * @template T of Ticket
+ *
  * @extends ServiceEntityRepository<T>
  */
 class TicketRepository extends ServiceEntityRepository

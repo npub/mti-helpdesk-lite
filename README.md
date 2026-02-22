@@ -80,8 +80,15 @@ curl -X "POST" "https://localhost:8000/api/v1/tickets" \
 }'
 ```
 
+### Получение списка заявок
+```curl
+## 2
+curl "https://localhost:8000/api/v1/tickets?status=new&page=1&per_page=10&q=%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%B0%D0%B5%D1%82&sort=-created_at" \
+     -H 'X-API-KEY: 123'
+```
+
 ### Получение карточки заявки с комментариями.
 ```curl
 curl "https://localhost:8000/api/v1/tickets/1" \
-     -H 'X-API-KEY: 123' \
+     -H 'X-API-KEY: 123'
 ```

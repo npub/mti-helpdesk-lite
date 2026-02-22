@@ -5,15 +5,19 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Controller\Exception\ApiHttpException;
+use App\Controller\Exception\BadRequestException;
 use App\Controller\Exception\NotFoundException;
 use App\Controller\Exception\UnauthorizedException;
 use App\Controller\Exception\UnprocessableEntityException;
+use App\Entity\Status;
 use App\Entity\Ticket;
 use App\Entity\TicketComment;
 use App\Repository\TicketCommentRepository;
 use App\Repository\TicketRepository;
+use Doctrine\Common\Collections\Order;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -30,7 +34,7 @@ final class ApiTicketController extends AbstractController
 
     /**
      * @param TicketCommentRepository<TicketComment> $ticketCommentRepository
-     * @param TicketRepository<Ticket> $ticketRepository
+     * @param TicketRepository<Ticket>               $ticketRepository
      */
     public function __construct(
         /** @var string Ключ авторизации */
@@ -68,7 +72,7 @@ final class ApiTicketController extends AbstractController
         /** @var array<string, mixed> */
         $data = $request->toArray();
 
-        if (\count($data) === 0) {
+        if (0 === \count($data)) {
             throw new UnprocessableEntityException('Ошибка структуры данных запроса', ['Пустой запрос']);
         }
 
@@ -167,7 +171,107 @@ final class ApiTicketController extends AbstractController
             }
 
             return $this->json($output);
+        } catch (ApiHttpException $e) {
+            return $e->createJsonResponse();
+        } catch (\Throwable $th) {
+            return ApiHttpException::createUnknownErrorJsonResponse($th);
+        }
+    }
 
+    /**
+     * Количество записей на странице.
+     */
+    public const RECORDS_PER_PAGE = 10;
+
+    /**
+     * Получение списка заявок (фильтры + пагинация).
+     *
+     * Фильтры (опциональны):
+     *   status — фильтр по статусу
+     *   q — поиск по title и description
+     *   page / per_page — пагинация (по умолчанию page = 1, per_page = 10)
+     *   sort — created_at или updated_at (направление через «-» (символ минуса) перед значением)
+     *
+     * GET: /api/v1/tickets?status=new&q=отчёт&page=1&per_page=20&sort=-created_at
+     */
+    #[Route('tickets', name: 'app_api_ticket_list', methods: Request::METHOD_GET)]
+    public function ticketsList(Request $request): JsonResponse
+    {
+        try {
+            $page = (int) $request->query->get('page', 1);
+            $recordsPerPage = (int) $request->query->get('per_page', self::RECORDS_PER_PAGE);
+            if ($page <= 0 || 0 >= $recordsPerPage || 100 < $recordsPerPage) {
+                throw new BadRequestException('Заданы неверные параметры пагинации (должно быть page > 1, per_page: от 1 до 100)');
+            }
+
+            $qb = $this->ticketRepository->createQueryBuilder('t')
+                // ->addOrderBy('l.id', Order::Descending->value)
+                ->setFirstResult($recordsPerPage * ($page - 1))
+                ->setMaxResults($recordsPerPage)
+            ;
+
+            // Фильтр по статусу
+            $status = $request->query->get('status');
+            if (null !== $status) {
+                $status = Status::tryFrom($status);
+
+                if (null === $status) {
+                    throw new BadRequestException('Указан неверный статус (допустимые значения: ' . implode(', ', Status::values()) . ')');
+                }
+
+                $qb
+                    ->andWhere('t.status = :status_filter')
+                    ->setParameter('status_filter', $status)
+                ;
+            }
+
+            // Фильтр по названию или описанию
+            $q = $request->query->get('q');
+            if (null !== $q) {
+                $qb
+                    ->andWhere('t.title LIKE :q_filter OR t.description LIKE :q_filter')
+                    ->setParameter('q_filter', '%' . $q . '%')
+                ;
+            }
+
+            // Сортировка
+            $sort = $request->query->get('sort');
+            if (null !== $sort) {
+                $direction = str_starts_with($sort, '-') ? Order::Descending : Order::Ascending;
+                $field = match (str_replace('-', '', $sort)) {
+                    'created_at' => 'createdAt',
+                    'updated_at' => 'updatedAt',
+                    default => null,
+                };
+                if (null === $field) {
+                    throw new BadRequestException('Указан неверный параметр сортировки (допустимые значения: [-]created_at, [-]updated_at)');
+                }
+
+                $qb
+                    ->addOrderBy('t.' . $field, $direction->value)
+                ;
+            }
+
+            $ticketsPaginator = new Paginator($qb, true);
+
+            $tickets = [];
+            foreach ($ticketsPaginator as $ticket) {
+                /** @var Ticket $ticket */
+                $tickets[] = [
+                    'id' => $ticket->getId(),
+                    'title' => $ticket->getTitle(),
+                    'status' => $ticket->getStatus()->value,
+                    'created_at' => $ticket->getCreatedAt()->format('Y-m-d H:i:s'),
+                    'updated_at' => $ticket->getUpdatedAt()->format('Y-m-d H:i:s'),
+                ];
+            }
+
+            return $this->json([
+                'page' => $page,
+                'per_page' => $recordsPerPage,
+                'total' => \count($ticketsPaginator),
+                'items' => $tickets,
+            ]);
         } catch (ApiHttpException $e) {
             return $e->createJsonResponse();
         } catch (\Throwable $th) {
