@@ -1,4 +1,4 @@
-# Micro Api for tickets 
+# Мини-сервис заявок в поддержку (Helpdesk Lite)
 
 ## Разворачивание проекта (dev)
 
