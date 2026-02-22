@@ -20,12 +20,14 @@ composer install
 
 Скопировать файл `.env.example` в `.env.local` и настроить переменные окружения в нём.
 
+```env
 DB_USER=root
 DB_PASS=
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_NAME=test
 APP_API_KEY=123
+```
 
 4. Создать структуру БД (ключ `--dump-sql` выдаст SQL для создания структуры БД вручную).
 
@@ -99,6 +101,7 @@ curl "https://localhost:8000/api/v1/tickets/1" \
 ```
 
 #### Добавление комментария и смена статуса заявки
+```curl
 curl -X "POST" "https://localhost:8000/api/v1/tickets/1/events" \
      -H 'X-API-KEY: 123' \
      -H 'Content-Type: application/json; charset=utf-8' \
@@ -110,3 +113,4 @@ curl -X "POST" "https://localhost:8000/api/v1/tickets/1/events" \
   },
   "status": "closed"
 }'
+```
